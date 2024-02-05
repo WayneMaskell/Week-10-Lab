@@ -26,23 +26,30 @@ public class RaycastShoot : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RaycastHit hit;
-        laserLine.SetPosition(0, gunEnd.position);
 
-        Vector3 rayOrigin = fpsCam.ViewportToWorldPoint (new Vector3 (0.5f, 0.5f, 0));
-        if (Physics.Raycast(rayOrigin, fpsCam.transform.forward, out hit ,weaponRange)) 
-        
-        {
-            laserLine.SetPosition(1, hit.point);
-        }
-        else 
-        {
-            laserLine.SetPosition (1, fpsCam.transform.forward);
-        }
-        if (Input.GetButtonDown("Fire1") && Time.time > nextFire) 
+        if (Input.GetButtonDown("Fire1") && Time.time > nextFire)
         {
             nextFire = Time.time + fireRate;
             StartCoroutine(ShotEffect());
+
+
+            RaycastHit hit;
+            laserLine.SetPosition(0, gunEnd.position);
+
+            Vector3 rayOrigin = fpsCam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0));
+            if (Physics.Raycast(rayOrigin, fpsCam.transform.forward, out hit, weaponRange))
+
+            {
+                laserLine.SetPosition(1, hit.point);
+                ShootableBox health = hit.collider.GetComponent<ShootableBox>();
+                if (health != null) { health.Damage(gunDamage); }
+                if (hit.rigidbody != null) { hit.rigidbody.AddForce(-hit.normal * hitForce); }
+            }
+            else
+            {
+                laserLine.SetPosition(1, fpsCam.transform.forward);
+            }
+            
         }
         
     }
@@ -51,7 +58,9 @@ public class RaycastShoot : MonoBehaviour
     {
         gunAudio.Play();
         laserLine.enabled = true;
+
         yield return shotDuration;
+
         laserLine.enabled = false;
     }
 }
